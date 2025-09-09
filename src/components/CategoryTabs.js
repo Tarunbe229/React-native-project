@@ -1,43 +1,69 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-const categories = ['STARTER', 'MAIN COURSE', 'DESSERT', 'SIDES'];
+const CATEGORIES = [
+  { id: 'STARTER', name: 'Starter' },
+  { id: 'MAIN COURSE', name: 'Main Course' },
+  { id: 'DESSERT', name: 'Desert' },
+  { id: 'SIDES', name: 'Sides' },
+];
 
-export default function CategoryTabs({ selectedCategory, setSelectedCategory }) {
+export default function CategoryTabs({ selectedCategory, setSelectedCategory, categoryCounts }) {
   return (
-    <View style={styles.row}>
-      {categories.map(cat => (
-        <TouchableOpacity
-          key={cat}
-          style={[
-            styles.tab,
-            selectedCategory === cat && styles.activeTab,
-          ]}
-          onPress={() => setSelectedCategory(cat)}
-        >
-          <Text
+    <View style={styles.container}>
+      {CATEGORIES.map(category => {
+        const isActive = selectedCategory === category.id;
+        return (
+          <TouchableOpacity
+            key={category.id}
             style={[
-              styles.text,
-              selectedCategory === cat && styles.activeText,
+              styles.tab,
+              isActive ? styles.activeTab : styles.normalTab,
             ]}
+            onPress={() => setSelectedCategory(category.id)}
+            activeOpacity={0.85}
           >
-            {cat}
-          </Text>
-        </TouchableOpacity>
-      ))}
+            <Text style={[styles.tabText, isActive && styles.activeTabText]}>
+              {category.name} {categoryCounts[category.id] || 0}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 12 },
-  tab: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: '#f2f2f2',
+  container: {
+    flexDirection: 'row',        // All tabs in a row
+    justifyContent: 'center',    // Center them horizontally
+    marginBottom: 15,
+    flexWrap: 'wrap',            // In case text is long, wrap to next line
   },
-  activeTab: { backgroundColor: '#007bff' },
-  text: { fontSize: 14, color: '#555' },
-  activeText: { color: '#fff', fontWeight: 'bold' },
+  tab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,       // ✅ Reduced horizontal space
+    borderWidth: 1,
+    borderRadius: 8,
+    marginHorizontal: 4,         // Space between tabs
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  normalTab: {
+    backgroundColor: '#fff',
+    borderColor: '#bbb',
+  },
+  activeTab: {
+    backgroundColor: '#FF941A',
+    borderColor: '#FF941A',
+  },
+  tabText: {
+    fontSize: 13,
+    color: '#424242',
+    fontWeight: '600',
+  },
+  activeTabText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 });

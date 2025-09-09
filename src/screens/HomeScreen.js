@@ -1,196 +1,302 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   StyleSheet,
   TouchableOpacity,
-} from "react-native";
-import DishCard from "../components/DishCard";
-import dishes from "../data/dishes.json";
+  SafeAreaView,
+  StatusBar,
+  Animated,
+} from 'react-native';
+import SearchBar from '../components/SearchBar';
+import CategoryTabs from '../components/CategoryTabs';
+import DishCard from '../components/DishCard';
+import dishesData from '../data/dishes.json';
 
-export default function HomeScreen({ navigation }) {
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [vegFilter, setVegFilter] = useState(null); // null = all, "VEG" or "NONVEG"
-  const [selectedCount, setSelectedCount] = useState(0);
-  const [dishCounts, setDishCounts] = useState({}); // track per-dish counts
+// ✅ ToggleSwitch with pill-shaped container, grey background, transparent border
+const ToggleSwitch = ({ isActive, onPress, activeColor }) => {
+  const animatedValue = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
-  // ✅ Filtering Logic
-  const filteredDishes = dishes.filter((dish) => {
-    const matchesSearch = dish.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: isActive ? 1 : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [isActive]);
 
-    const matchesCategory =
-      selectedCategory === "All" || dish.mealType === selectedCategory;
-
-    const matchesVeg =
-      vegFilter === null || dish.type.toUpperCase() === vegFilter;
-
-    return matchesSearch && matchesCategory && matchesVeg;
+  const translateX = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [3, 25], // small knob travels from left to right
   });
 
-  const categories = ["All", "Starter", "Main Course", "Dessert", "Sides"];
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <View style={styles.toggleContainer}>
+        {/* Small Knob Circle with Square Border */}
+        <Animated.View
+          style={[
+            styles.knobCircle,
+            {
+              borderColor: activeColor, // square border matches circle color
+              transform: [{ translateX }],
+            },
+          ]}
+        >
+          {/* Inner Circle */}
+          <View
+            style={[
+              styles.innerCircle,
+              { backgroundColor: activeColor }
+            ]}
+          />
+        </Animated.View>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
-  // ✅ Handle count update from DishCard
-  const handleCountChange = (dishId, newCount) => {
-    setDishCounts((prev) => {
-      const updated = { ...prev, [dishId]: newCount };
-      // recalc total
-      const total = Object.values(updated).reduce((sum, c) => sum + c, 0);
-      setSelectedCount(total);
-      return updated;
+export default function HomeScreen({ navigation }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('STARTER');
+  const [vegFilter, setVegFilter] = useState(null);
+  const [selectedDishes, setSelectedDishes] = useState({});
+
+  // Category counts
+  const categoryCounts = useMemo(() => {
+    const counts = {
+      'STARTER': 0,
+      'MAIN COURSE': 0,
+      'DESSERT': 0,
+      'SIDES': 0,
+    };
+
+    Object.entries(selectedDishes).forEach(([dishId, count]) => {
+      if (count > 0) {
+        const dish = dishesData.find(d => d.id.toString() === dishId);
+        if (dish && counts.hasOwnProperty(dish.mealType)) {
+          counts[dish.mealType] += count;
+        }
+      }
     });
+
+    return counts;
+  }, [selectedDishes]);
+
+  const totalSelected = Object.values(selectedDishes).reduce(
+    (sum, count) => sum + count,
+    0
+  );
+
+  const filteredDishes = useMemo(() => {
+    return dishesData.filter(dish => {
+      if (dish.mealType !== selectedCategory) return false;
+      if (
+        searchQuery &&
+        !dish.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
+        return false;
+      }
+      if (vegFilter && dish.type !== vegFilter) return false;
+      return true;
+    });
+  }, [selectedCategory, searchQuery, vegFilter]);
+
+  const handleDishCountChange = (dishId, count) => {
+    setSelectedDishes(prev => ({
+      ...prev,
+      [dishId]: count,
+    }));
+  };
+
+  const toggleVegFilter = filterType => {
+    setVegFilter(vegFilter === filterType ? null : filterType);
+  };
+
+  const getCategoryDisplayName = () => {
+    switch (selectedCategory) {
+      case 'STARTER':
+        return 'Starters Selected';
+      case 'MAIN COURSE':
+        return 'Main Courses Selected';
+      case 'DESSERT':
+        return 'Desserts Selected';
+      case 'SIDES':
+        return 'Sides Selected';
+      default:
+        return 'Items Selected';
+    }
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
       {/* Search Bar */}
-      <TextInput
-        style={styles.search}
-        placeholder="Search dish for your party..."
-        placeholderTextColor="#aaa"
-        value={search}
-        onChangeText={setSearch}
-      />
-
-      {/* Veg/Non-Veg Buttons */}
-      <View style={styles.filterRow}>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            vegFilter === "VEG" && styles.activeVeg,
-          ]}
-          onPress={() => setVegFilter(vegFilter === "VEG" ? null : "VEG")}
-        >
-          <Text style={styles.vegSymbol}>🟢</Text>
-          <Text style={styles.filterText}>Veg</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            vegFilter === "NONVEG" && styles.activeNonVeg,
-          ]}
-          onPress={() => setVegFilter(vegFilter === "NONVEG" ? null : "NONVEG")}
-        >
-          <Text style={styles.nonVegSymbol}>🔴</Text>
-          <Text style={styles.filterText}>Non-Veg</Text>
-        </TouchableOpacity>
-      </View>
+      <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
       {/* Category Tabs */}
-      <View style={styles.tabs}>
-        {categories.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={[
-              styles.tab,
-              selectedCategory === cat && styles.activeTab,
-            ]}
-            onPress={() => setSelectedCategory(cat)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                selectedCategory === cat && styles.activeTabText,
-              ]}
-            >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <CategoryTabs
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        categoryCounts={categoryCounts}
+      />
+
+      {/* Veg / Non-Veg Filter */}
+      <View style={styles.filterHeader}>
+        <Text style={styles.filterLabel}>
+          {getCategoryDisplayName()} ({categoryCounts[selectedCategory] || 0})
+        </Text>
+        <View style={styles.filterButtons}>
+          <View style={styles.toggleWrapper}>
+            <ToggleSwitch
+              isActive={vegFilter === 'VEG'}
+              onPress={() => toggleVegFilter('VEG')}
+              activeColor="#4CAF50" // green
+            />
+          </View>
+          <View style={styles.toggleWrapper}>
+            <ToggleSwitch
+              isActive={vegFilter === 'NONVEG'}
+              onPress={() => toggleVegFilter('NONVEG')}
+              activeColor="#F44336" // red
+            />
+          </View>
+        </View>
       </View>
 
       {/* Dish List */}
       <FlatList
         data={filteredDishes}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
           <DishCard
             dish={item}
-            onCountChange={(count) => handleCountChange(item.id, count)}
-            onPressIngredients={() =>
-              navigation.navigate("Ingredients", { dish: item })
+            count={selectedDishes[item.id] || 0}
+            onCountChange={count => handleDishCountChange(item.id, count)}
+            onIngredientPress={() =>
+              navigation.navigate('Ingredients', { dish: item })
             }
           />
         )}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.dishList}
+        showsVerticalScrollIndicator={false}
       />
 
-      {/* Footer with Counter */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Total Dish Selected {selectedCount}
-        </Text>
+      {/* Bottom Bar */}
+      <View style={styles.bottomBar}>
+        <Text style={styles.totalText}>Total Dish Selected {totalSelected}</Text>
         <TouchableOpacity style={styles.continueButton}>
-          <Text style={styles.continueText}>Continue</Text>
+          <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 10 },
-  search: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 25,
-    paddingHorizontal: 15,
+  container: { 
+    flex: 1, 
+    backgroundColor: '#fff' 
+  },
+  filterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 10,
+  },
+  filterLabel: { 
+    fontSize: 16, 
+    fontWeight: '600', 
+    color: '#333' 
+  },
+  filterButtons: { 
+    flexDirection: 'row', 
+    gap: 12,
+  },
+
+  // ✅ NEW STYLE ADDED: Individual wrapper with grey border for each toggle
+  toggleWrapper: {
+    borderWidth: 1.5,
+    borderColor: '#f1f1f1ff',
+    borderRadius: 17,
+    paddingHorizontal: 7,
     paddingVertical: 8,
-    marginBottom: 10,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: '#fff',
   },
-  filterRow: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    marginBottom: 10,
-    gap: 10,
+
+  // ✅ Toggle Styles - pill-shaped container with grey background and transparent border
+  toggleContainer: {
+    width: 42,
+    height: 12,
+    borderRadius: 6, // perfectly pill-shaped (half of height)
+    backgroundColor: '#f1f1f1ff', // grey background
+    borderWidth: 0,
+    borderColor: '#666',
+    justifyContent: 'center',
+    position: 'relative',
   },
-  filterButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
+  knobCircle: {
+    width: 20, // small knob-like size
+    height: 20,
+    borderRadius: 6, // square border (small radius for slightly rounded corners)
+    borderWidth: 1.5, // outline thickness
+    backgroundColor: 'white', // transparent background for square border
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 1.5,
+    elevation: 2,
   },
-  vegSymbol: { fontSize: 16, marginRight: 5 },
-  nonVegSymbol: { fontSize: 16, marginRight: 5 },
-  filterText: { fontSize: 14 },
-  activeVeg: { borderColor: "green", backgroundColor: "#e6ffe6" },
-  activeNonVeg: { borderColor: "red", backgroundColor: "#ffe6e6" },
-  tabs: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 10,
+  innerCircle: {
+    width: 10, // inner circle size
+    height: 10,
+    borderRadius: 5, // perfect inner circle
   },
-  tab: { paddingVertical: 6, paddingHorizontal: 10 },
-  activeTab: { borderBottomWidth: 2, borderBottomColor: "#007AFF" },
-  tabText: { fontSize: 14, color: "#555" },
-  activeTabText: { color: "#007AFF", fontWeight: "bold" },
-  footer: {
-    position: "absolute",
+
+  dishList: { 
+    paddingHorizontal: 20, 
+    paddingBottom: 80 
+  },
+  bottomBar: {
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 12,
-    borderTopWidth: 1,
-    borderColor: "#ddd",
-  },
-  footerText: { fontSize: 14, fontWeight: "bold" },
-  continueButton: {
-    backgroundColor: "black",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingVertical: 15,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  totalText: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: '#000' 
+  },
+  continueButton: {
+    backgroundColor: '#000',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 6,
   },
-  continueText: { color: "white", fontWeight: "bold" },
+  continueButtonText: { 
+    color: '#fff', 
+    fontSize: 14, 
+    fontWeight: '600' 
+  },
 });
