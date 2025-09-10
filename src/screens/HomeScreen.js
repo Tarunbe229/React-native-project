@@ -12,9 +12,9 @@ import {
 import SearchBar from '../components/SearchBar';
 import CategoryTabs from '../components/CategoryTabs';
 import DishCard from '../components/DishCard';
+import BottomSheetModal from '../components/BottomSheetModal';
 import dishesData from '../data/dishes.json';
 
-// ✅ ToggleSwitch with pill-shaped container, grey background, transparent border
 const ToggleSwitch = ({ isActive, onPress, activeColor }) => {
   const animatedValue = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
@@ -28,23 +28,21 @@ const ToggleSwitch = ({ isActive, onPress, activeColor }) => {
 
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [3, 25], // small knob travels from left to right
+    outputRange: [3, 25],
   });
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
       <View style={styles.toggleContainer}>
-        {/* Small Knob Circle with Square Border */}
         <Animated.View
           style={[
             styles.knobCircle,
             {
-              borderColor: activeColor, // square border matches circle color
+              borderColor: activeColor,
               transform: [{ translateX }],
             },
           ]}
         >
-          {/* Inner Circle */}
           <View
             style={[
               styles.innerCircle,
@@ -62,8 +60,9 @@ export default function HomeScreen({ navigation }) {
   const [selectedCategory, setSelectedCategory] = useState('STARTER');
   const [vegFilter, setVegFilter] = useState(null);
   const [selectedDishes, setSelectedDishes] = useState({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedDish, setSelectedDish] = useState(null);
 
-  // Category counts
   const categoryCounts = useMemo(() => {
     const counts = {
       'STARTER': 0,
@@ -71,7 +70,6 @@ export default function HomeScreen({ navigation }) {
       'DESSERT': 0,
       'SIDES': 0,
     };
-
     Object.entries(selectedDishes).forEach(([dishId, count]) => {
       if (count > 0) {
         const dish = dishesData.find(d => d.id.toString() === dishId);
@@ -80,7 +78,6 @@ export default function HomeScreen({ navigation }) {
         }
       }
     });
-
     return counts;
   }, [selectedDishes]);
 
@@ -116,34 +113,36 @@ export default function HomeScreen({ navigation }) {
 
   const getCategoryDisplayName = () => {
     switch (selectedCategory) {
-      case 'STARTER':
-        return 'Starters Selected';
-      case 'MAIN COURSE':
-        return 'Main Courses Selected';
-      case 'DESSERT':
-        return 'Desserts Selected';
-      case 'SIDES':
-        return 'Sides Selected';
-      default:
-        return 'Items Selected';
+      case 'STARTER': return 'Starters Selected';
+      case 'MAIN COURSE': return 'Main Courses Selected';
+      case 'DESSERT': return 'Desserts Selected';
+      case 'SIDES': return 'Sides Selected';
+      default: return 'Items Selected';
     }
+  };
+
+  const handleDishPress = (dish) => {
+    setSelectedDish(dish);
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedDish(null);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      {/* Search Bar */}
       <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-      {/* Category Tabs */}
       <CategoryTabs
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         categoryCounts={categoryCounts}
       />
 
-      {/* Veg / Non-Veg Filter */}
       <View style={styles.filterHeader}>
         <Text style={styles.filterLabel}>
           {getCategoryDisplayName()} ({categoryCounts[selectedCategory] || 0})
@@ -153,20 +152,24 @@ export default function HomeScreen({ navigation }) {
             <ToggleSwitch
               isActive={vegFilter === 'VEG'}
               onPress={() => toggleVegFilter('VEG')}
-              activeColor="#4CAF50" // green
+              activeColor="#4CAF50"
             />
           </View>
           <View style={styles.toggleWrapper}>
             <ToggleSwitch
               isActive={vegFilter === 'NONVEG'}
               onPress={() => toggleVegFilter('NONVEG')}
-              activeColor="#F44336" // red
+              activeColor="#F44336"
             />
           </View>
         </View>
       </View>
 
-      {/* Dish List */}
+      <TouchableOpacity style={styles.northIndianSection}>
+        <Text style={styles.northIndianText}>North Indian</Text>
+        <Text style={styles.arrowUp}>⌃</Text>
+      </TouchableOpacity>
+
       <FlatList
         data={filteredDishes}
         keyExtractor={item => item.id.toString()}
@@ -175,31 +178,49 @@ export default function HomeScreen({ navigation }) {
             dish={item}
             count={selectedDishes[item.id] || 0}
             onCountChange={count => handleDishCountChange(item.id, count)}
-            onIngredientPress={() =>
-              navigation.navigate('Ingredients', { dish: item })
-            }
+            onIngredientPress={() => navigation.navigate('Ingredients', { dish: item })}
+            onCardPress={() => handleDishPress(item)}
+            onReadMorePress={() => handleDishPress(item)}
           />
         )}
         contentContainerStyle={styles.dishList}
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Bottom Bar */}
       <View style={styles.bottomBar}>
-        <Text style={styles.totalText}>Total Dish Selected {totalSelected}</Text>
-        <TouchableOpacity style={styles.continueButton}>
-          <Text style={styles.continueButtonText}>Continue</Text>
-        </TouchableOpacity>
+        <View style={styles.totalTextContainer}>
+          <View style={styles.totalTextRow}>
+            <Text style={styles.totalLabel}>Total Dish Selected</Text>
+            <Text style={styles.totalNumber}>{totalSelected}</Text>
+          </View>
+          <Text style={styles.arrowIcon}>{'>'}</Text>
+        </View>
+        <View style={styles.continueButtonContainer}>
+          <TouchableOpacity style={styles.continueButton}>
+            <Text style={styles.continueButtonText}>Continue</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      <BottomSheetModal
+        visible={modalVisible}
+        dish={selectedDish}
+        count={selectedDish ? (selectedDishes[selectedDish.id] || 0) : 0}
+        onClose={handleCloseModal}
+        onCountChange={handleDishCountChange}
+        onIngredientPress={() => {
+          handleCloseModal();
+          if (selectedDish) {
+            navigation.navigate('Ingredients', { dish: selectedDish });
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#fff' 
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
   filterHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -208,17 +229,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginBottom: 10,
   },
-  filterLabel: { 
-    fontSize: 16, 
-    fontWeight: '600', 
-    color: '#333' 
-  },
-  filterButtons: { 
-    flexDirection: 'row', 
-    gap: 12,
-  },
-
-  // ✅ NEW STYLE ADDED: Individual wrapper with grey border for each toggle
+  filterLabel: { fontSize: 16, fontWeight: '600', color: '#333', fontFamily: 'OpenSans-Italic' },
+  filterButtons: { flexDirection: 'row', gap: 12 },
   toggleWrapper: {
     borderWidth: 1.5,
     borderColor: '#f1f1f1ff',
@@ -227,24 +239,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: '#fff',
   },
-
-  // ✅ Toggle Styles - pill-shaped container with grey background and transparent border
   toggleContainer: {
     width: 42,
     height: 12,
-    borderRadius: 6, // perfectly pill-shaped (half of height)
-    backgroundColor: '#f1f1f1ff', // grey background
+    borderRadius: 6,
+    backgroundColor: '#f1f1f1ff',
     borderWidth: 0,
     borderColor: '#666',
     justifyContent: 'center',
     position: 'relative',
   },
   knobCircle: {
-    width: 20, // small knob-like size
+    width: 20,
     height: 20,
-    borderRadius: 6, // square border (small radius for slightly rounded corners)
-    borderWidth: 1.5, // outline thickness
-    backgroundColor: 'white', // transparent background for square border
+    borderRadius: 6,
+    borderWidth: 1.5,
+    backgroundColor: 'white',
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
@@ -254,27 +264,25 @@ const styles = StyleSheet.create({
     shadowRadius: 1.5,
     elevation: 2,
   },
-  innerCircle: {
-    width: 10, // inner circle size
-    height: 10,
-    borderRadius: 5, // perfect inner circle
+  innerCircle: { width: 10, height: 10, borderRadius: 5 },
+  northIndianSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: 'transparent',
+    marginBottom: 8,
   },
-
-  dishList: { 
-    paddingHorizontal: 20, 
-    paddingBottom: 80 
-  },
+  northIndianText: { fontSize: 18, fontWeight: '600', color: '#000', fontFamily: 'OpenSans-Italic' },
+  arrowUp: { fontSize: 20, color: '#666', fontWeight: '400', fontFamily: 'OpenSans-Italic' },
+  dishList: { paddingHorizontal: 20, paddingBottom: 110 },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     borderTopWidth: 1,
     borderTopColor: '#eee',
     elevation: 5,
@@ -283,20 +291,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  totalText: { 
-    fontSize: 14, 
-    fontWeight: '600', 
-    color: '#000' 
-  },
-  continueButton: {
-    backgroundColor: '#000',
+  totalTextContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFFAF4',
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 6,
+    paddingVertical: 12,
   },
-  continueButtonText: { 
-    color: '#fff', 
-    fontSize: 14, 
-    fontWeight: '600' 
-  },
+  totalTextRow: { flexDirection: 'row', alignItems: 'center' },
+  totalLabel: { fontSize: 15, fontWeight: '600', color: '#666', fontFamily: 'OpenSans-Bold' },
+  totalNumber: { fontSize: 15, fontWeight: '700', color: '#000', fontFamily: 'OpenSans-Bold', marginLeft: 5 },
+  arrowIcon: { fontSize: 20, color: '#666', fontWeight: '700', fontFamily: 'OpenSans-Bold' },
+  continueButtonContainer: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#fff' },
+  continueButton: { backgroundColor: '#000', paddingVertical: 12, borderRadius: 7, width: '100%', alignItems: 'center' },
+  continueButtonText: { color: '#fff', fontSize: 16, fontWeight: '700', fontFamily: 'OpenSans-Bold' },
 });
