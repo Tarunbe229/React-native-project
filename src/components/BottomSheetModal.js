@@ -12,9 +12,10 @@ import {
   Animated,
   PanResponder,
 } from 'react-native';
+import ingredientImg from '../assets/ingredient.png'; // <-- your PNG
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const MODAL_HEIGHT = SCREEN_HEIGHT * 0.55;
+const MODAL_HEIGHT = SCREEN_HEIGHT * 0.50;
 
 export default function BottomSheetModal({
   visible,
@@ -53,8 +54,8 @@ export default function BottomSheetModal({
   const getImageSource = () => dish.image
     ? { uri: dish.image }
     : dish.category?.image
-    ? { uri: dish.category.image }
-    : { uri: 'https://via.placeholder.com/300x200?text=Dish' };
+      ? { uri: dish.category.image }
+      : { uri: 'https://via.placeholder.com/300x200?text=Dish' };
 
   const translateY = animatedValue.interpolate({ inputRange: [0, 1], outputRange: [MODAL_HEIGHT, 0] });
 
@@ -85,8 +86,16 @@ export default function BottomSheetModal({
                       {getVegSymbol()}
                     </View>
 
-                    <TouchableOpacity style={styles.removeButton} onPress={count > 0 ? handleRemove : handleAdd}>
-                      <Text style={[styles.removeButtonText, count === 0 && { color: '#4CAF50' }]}>
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={count > 0 ? handleRemove : handleAdd}
+                    >
+                      <Text
+                        style={[
+                          styles.actionButtonText,
+                          { color: count > 0 ? '#FF941A' : '#4CAF50' } // orange for Remove, green for Add
+                        ]}
+                      >
                         {count > 0 ? 'Remove' : 'Add +'}
                       </Text>
                     </TouchableOpacity>
@@ -100,7 +109,7 @@ export default function BottomSheetModal({
 
                   {/* Ingredient button */}
                   <TouchableOpacity style={styles.ingredientButton} onPress={onIngredientPress}>
-                    <Text style={styles.ingredientIcon}>{'\u{1F35A}'}</Text>
+                    <Image source={ingredientImg} style={styles.ingredientImage} resizeMode="contain" />
                     <Text style={styles.ingredientText}>Ingredient</Text>
                   </TouchableOpacity>
                 </View>
@@ -115,22 +124,54 @@ export default function BottomSheetModal({
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalContainer: { height: MODAL_HEIGHT, backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 0, paddingTop: 8, elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.25, shadowRadius: 10 },
+  modalContainer: {
+    height: MODAL_HEIGHT,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 0,
+    paddingTop: 8,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10
+  },
   handleBar: { width: 40, height: 4, backgroundColor: '#ccc', borderRadius: 2, alignSelf: 'center', marginBottom: 15 },
-  imageContainer: { width: '90%', height: 200, backgroundColor: '#404040', borderRadius: 20, justifyContent: 'flex-end', alignItems: 'center', alignSelf: 'center', marginBottom: 20 },
-  dishImage: { width: '90%', height: '90%', borderRadius: 12 },
+  imageContainer: { width: '90%', height: 180, backgroundColor: '#404040', borderRadius: 20, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 20, },
+  dishImage: { width: '90%', height: '90%', borderRadius: 10, top: 22 },
   detailsContainer: { paddingHorizontal: 20, paddingBottom: 20 },
   nameRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, justifyContent: 'space-between' },
-  vegSymbolContainer: { width: 18, height: 18, borderWidth: 1.5, borderColor: '#4CAF50', borderRadius: 5, marginLeft: 4, justifyContent: 'center', alignItems: 'center' },
-  vegDot: { width: 8, height: 8, backgroundColor: '#4CAF50', borderRadius: 4 },
-  nonVegSymbolContainer: { width: 18, height: 18, borderWidth: 1.5, borderColor: '#F44336', borderRadius: 5, marginLeft: 4, justifyContent: 'center', alignItems: 'center' },
-  nonVegDot: { width: 8, height: 8, backgroundColor: '#F44336', borderRadius: 4 },
-  dishName: { fontSize: 20, fontWeight: '700', color: '#000', fontFamily: 'OpenSans-Bold' },
-  descriptionText: { fontSize: 16, color: '#9c9595ff', lineHeight: 22, marginBottom: 16, fontFamily: 'OpenSans-Italic', fontWeight: '600' },
+  vegSymbolContainer: { width: 17, height: 17, borderWidth: 1.5, borderColor: '#4CAF50', borderRadius: 5, marginLeft: 4, justifyContent: 'center', alignItems: 'center' },
+  vegDot: { width: 7, height: 7, backgroundColor: '#4CAF50', borderRadius: 3.5 },
+  nonVegSymbolContainer: { width: 17, height: 17, borderWidth: 1.5, borderColor: '#F44336', borderRadius: 5, marginLeft: 4, justifyContent: 'center', alignItems: 'center' },
+  nonVegDot: { width: 7, height: 7, backgroundColor: '#F44336', borderRadius: 3.5 },
+  dishName: { fontSize: 20, fontWeight: '700', color: '#000', fontFamily: 'OpenSans-italic' },
+  descriptionText: { fontSize: 16, color: '#9c9595ff', lineHeight: 22, marginBottom: 8, fontFamily: 'OpenSans-Italic', fontWeight: '600' },
   categoryLabel: { fontWeight: '700', color: '#000', fontFamily: 'OpenSans-Italic' },
+
   ingredientButton: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' },
-  ingredientIcon: { fontSize: 18, marginRight: 6, lineHeight: 24, backgroundColor: '#FFA500', borderRadius: 6, paddingHorizontal: 0, color: '#fff', fontWeight: '700', fontFamily: 'OpenSans-SemiBold' },
-  ingredientText: { fontSize: 18, color: '#FF941A', fontWeight: '700', fontFamily: 'OpenSans-SemiBold' },
-  removeButton: { backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 6, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2 },
-  removeButtonText: { color: '#FF941A', fontSize: 16, fontWeight: 'bold', fontFamily: 'OpenSans-Bold' },
+  ingredientImage: { width: 24, height: 30, marginRight: 4 },
+  ingredientText: { fontSize: 16, color: '#FF941A', fontWeight: '700', fontFamily: 'OpenSans-SemiBold' },
+
+  // unified Add/Remove button style
+  actionButton: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    minWidth: 100,
+    alignItems: 'center',
+    // shadow
+    elevation: 2,
+    shadowColor: '#908d8dff',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1.5,
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'OpenSans-Bold',
+  },
 });

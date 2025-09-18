@@ -7,6 +7,9 @@ import {
   Image,
 } from 'react-native';
 
+// 👇 import your ingredient image from assets
+import ingredientImg from '../assets/ingredient.png'; // adjust the path as needed
+
 export default function DishCard({
   dish,
   count,
@@ -61,84 +64,90 @@ export default function DishCard({
     }
   };
 
-  // Truncate description to fit ~1.5 lines including ".... Read more"
   const getShortDescription = () => {
     if (!dish.description) return '';
-    const maxChars = 38; // adjust for approx 1.5 lines
-    const truncated = dish.description.length > maxChars
+    const maxChars = 43;
+    return dish.description.length > maxChars
       ? dish.description.substring(0, maxChars)
       : dish.description;
-    return truncated;
   };
 
   return (
-    <TouchableOpacity 
-      style={styles.card} 
-      onPress={onCardPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.details}>
-        <View style={styles.nameRow}>
-          <Text style={styles.name}>{dish.name}</Text>
-          {getVegSymbol()}
-        </View>
-
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.description}>
-            {getShortDescription()}
-            <Text style={styles.readMoreText} onPress={handleReadMorePress}>
-              .... Read more
-            </Text>
-          </Text>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.ingredientButtonContainer} 
-          onPress={handleIngredientPress}
-        >
-          <View style={styles.ingredientIconContainer}>
-            <Text style={styles.ingredientIcon}>🍚</Text>
+    <View>
+      <TouchableOpacity 
+        style={styles.card} 
+        onPress={onCardPress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.details}>
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{dish.name}</Text>
+            {getVegSymbol()}
           </View>
-          <Text style={styles.ingredientText}>Ingredient</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.imageContainer}>
-        <View style={styles.imageWrapper}>
-          <Image source={getImageSource()} style={styles.image} />
+          <View style={styles.descriptionContainer}>
+            <Text style={styles.description}>
+              {getShortDescription()}
+              {/* normal dots */}
+              <Text style={styles.description}>.... </Text>
+              {/* bold Read more */}
+              <Text style={styles.readMoreText} onPress={handleReadMorePress}>
+                Read more
+              </Text>
+            </Text>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.ingredientButtonContainer} 
+            onPress={handleIngredientPress}
+          >
+            <View style={styles.ingredientIconContainer}>
+              {/* 👇 replaced emoji with image */}
+              <Image source={ingredientImg} style={styles.ingredientImage} resizeMode="contain" />
+            </View>
+            <Text style={styles.ingredientText}>Ingredient</Text>
+          </TouchableOpacity>
         </View>
-        
-        {count === 0 ? (
-          <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-            <Text style={styles.addButtonText}>Add +</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.removeButton} onPress={handleRemove}>
-            <Text style={styles.removeButtonText}>Remove</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </TouchableOpacity>
+
+        <View style={styles.imageContainer}>
+          <View style={styles.imageWrapper}>
+            <Image source={getImageSource()} style={styles.image} />
+          </View>
+
+          {count === 0 ? (
+            <TouchableOpacity style={styles.actionButton} onPress={handleAdd}>
+              <Text style={styles.addButtonText}>Add +</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.actionButton} onPress={handleRemove}>
+              <Text style={styles.removeButtonText}>Remove</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </TouchableOpacity>
+      <View style={styles.separator} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 4,
-    marginBottom: 10,
-    padding: 12,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    borderRadius: 0,
+    marginBottom: 6,
+    marginTop: 6,
+    padding: 0,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   details: {
     flex: 1,
     marginRight: 12,
+    justifyContent: 'center',
+    paddingTop: 10,
   },
   nameRow: {
     flexDirection: 'row',
@@ -146,8 +155,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   vegSymbolContainer: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     borderWidth: 1.5,
     borderColor: '#4CAF50',
     borderRadius: 5,
@@ -156,14 +165,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   vegDot: {
-    width: 8,
-    height: 8,
+    width: 6,
+    height: 6,
     backgroundColor: '#4CAF50',
     borderRadius: 4,
   },
   nonVegSymbolContainer: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     borderWidth: 1.5,
     borderColor: '#F44336',
     borderRadius: 5,
@@ -172,15 +181,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   nonVegDot: {
-    width: 8,
-    height: 8,
+    width: 6,
+    height: 6,
     backgroundColor: '#F44336',
     borderRadius: 4,
   },
   name: {
     fontSize: 16,
     fontWeight: '700',
-    fontStyle: 'opensans-italic',
     color: '#000',
     flexShrink: 1,
   },
@@ -195,8 +203,8 @@ const styles = StyleSheet.create({
     fontFamily: 'OpenSans-Italic',
   },
   readMoreText: {
-    color: '#000',        // dark color
-    fontWeight: '700',    // bold
+    color: '#000',
+    fontWeight: '700',
     fontFamily: 'OpenSans-Italic',
   },
   ingredientButtonContainer: {
@@ -206,22 +214,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   ingredientIconContainer: {
-    backgroundColor: '#FFA500',
     width: 22,
     height: 22,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 4,
     padding: 0,
   },
-  ingredientIcon: {
-    fontSize: 16,
-    lineHeight: 16,
-    textAlign: 'center',
+  ingredientImage: {
+    width: 18,
+    height: 18,
   },
   ingredientText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#f4962bff',
     fontWeight: '700',
     fontFamily: 'OpenSans-SemiBold',
@@ -232,31 +238,33 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     width: 120,
-    height: 100,
+    height: 110,
     backgroundColor: '#404040',
-    borderRadius: 12,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
   },
   image: {
     width: 100,
-    height: 85,
-    borderRadius: 8,
+    height: 120,
+    borderRadius: 0,
   },
-  addButton: {
+  actionButton: {
     position: 'absolute',
-    bottom: -15,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    bottom: -16,
     backgroundColor: '#fff',
-    paddingHorizontal: 26,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    minWidth: 90,
+    alignItems: 'center',
+
+    borderWidth: 0,
+    elevation: 2,
+    shadowColor: '#b3a6a6ff',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 1.5,
   },
   addButtonText: {
     color: '#4CAF50',
@@ -264,25 +272,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'OpenSans-Italic',
   },
-  removeButton: {
-    position: 'absolute',
-    bottom: -15,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 6,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
   removeButtonText: {
     color: '#FF941A',
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: 'OpenSans-Italic',
+  },
+  separator: {
+    height: 1,
+    width: '94%',
+    alignSelf: 'center',
+    backgroundColor: '#00000010',
+    marginBottom: 6,
+    marginTop: 10,
+    borderRadius: 2,
   },
 });

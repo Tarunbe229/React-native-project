@@ -135,7 +135,11 @@ export default function HomeScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <SearchBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onBackPress={() => navigation.goBack()}
+      />
 
       <CategoryTabs
         selectedCategory={selectedCategory}
@@ -167,7 +171,7 @@ export default function HomeScreen({ navigation }) {
 
       <TouchableOpacity style={styles.northIndianSection}>
         <Text style={styles.northIndianText}>North Indian</Text>
-        <Text style={styles.arrowUp}>⌃</Text>
+        <Text style={[styles.arrowUp, { transform: [{ rotate: '90deg' }] }]}>‹</Text>
       </TouchableOpacity>
 
       <FlatList
@@ -193,7 +197,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.totalLabel}>Total Dish Selected</Text>
             <Text style={styles.totalNumber}>{totalSelected}</Text>
           </View>
-          <Text style={styles.arrowIcon}>{'>'}</Text>
+          <Text style={[styles.arrowIcon, { transform: [{ rotate: '180deg' }] }]}>‹</Text>
         </View>
         <View style={styles.continueButtonContainer}>
           <TouchableOpacity style={styles.continueButton}>
@@ -225,23 +229,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 10,
+    paddingHorizontal: 21,
+    paddingVertical: 10,
+    marginBottom: 6,
   },
-  filterLabel: { fontSize: 16, fontWeight: '600', color: '#333', fontFamily: 'OpenSans-Italic' },
+  filterLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1C',
+    fontFamily: 'OpenSans-bold',
+    letterSpacing: 0.1
+  },
   filterButtons: { flexDirection: 'row', gap: 12 },
   toggleWrapper: {
     borderWidth: 1.5,
     borderColor: '#f1f1f1ff',
     borderRadius: 17,
     paddingHorizontal: 7,
-    paddingVertical: 8,
+    paddingVertical: 9,
     backgroundColor: '#fff',
   },
   toggleContainer: {
-    width: 42,
-    height: 12,
+    width: 38,
+    height: 8,
     borderRadius: 6,
     backgroundColor: '#f1f1f1ff',
     borderWidth: 0,
@@ -250,8 +260,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   knobCircle: {
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
     borderRadius: 6,
     borderWidth: 1.5,
     backgroundColor: 'white',
@@ -259,12 +269,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.15,
     shadowRadius: 1.5,
     elevation: 2,
   },
-  innerCircle: { width: 10, height: 10, borderRadius: 5 },
+  innerCircle: { width: 8, height: 8, borderRadius: 4 },
   northIndianSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -272,10 +282,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     backgroundColor: 'transparent',
-    marginBottom: 8,
+    marginBottom: 1,
+    marginTop: -10,
   },
-  northIndianText: { fontSize: 18, fontWeight: '600', color: '#000', fontFamily: 'OpenSans-Italic' },
-  arrowUp: { fontSize: 20, color: '#666', fontWeight: '400', fontFamily: 'OpenSans-Italic' },
+  northIndianText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    fontFamily: 'OpenSans-bold',
+    letterSpacing: 0.1,
+  },
+  arrowUp: {
+    fontSize: 30,
+    color: '#585757ff',
+    fontWeight: '500',
+    marginRight: 4,
+  },
   dishList: { paddingHorizontal: 20, paddingBottom: 110 },
   bottomBar: {
     position: 'absolute',
@@ -295,15 +317,60 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFAF4',
+    backgroundColor: 'transparent', // fully transparent
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 2,
   },
   totalTextRow: { flexDirection: 'row', alignItems: 'center' },
-  totalLabel: { fontSize: 15, fontWeight: '600', color: '#666', fontFamily: 'OpenSans-Bold' },
-  totalNumber: { fontSize: 15, fontWeight: '700', color: '#000', fontFamily: 'OpenSans-Bold', marginLeft: 5 },
-  arrowIcon: { fontSize: 20, color: '#666', fontWeight: '700', fontFamily: 'OpenSans-Bold' },
-  continueButtonContainer: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#fff' },
-  continueButton: { backgroundColor: '#000', paddingVertical: 12, borderRadius: 7, width: '100%', alignItems: 'center' },
-  continueButtonText: { color: '#fff', fontSize: 16, fontWeight: '700', fontFamily: 'OpenSans-Bold' },
+  totalLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#494848ff',
+    fontFamily: 'OpenSans-italic',
+  },
+  totalNumber: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#000',
+    fontFamily: 'OpenSans-bold',
+    marginLeft: 7,
+  },
+  arrowIcon: {
+    fontSize: 30,
+    color: '#585757ff',
+    fontWeight: '500',
+    marginRight: 4,
+  },
+  continueButtonContainer: {
+  paddingHorizontal: 20,
+  paddingVertical: 10,
+  backgroundColor: 'transparent',
+  // Shadow for iOS
+  shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+  backgroundColor: 'white',  // Temporary background to visualize padding
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  // Elevation for Android
+  elevation: 5,
+},
+continueButton: {
+  backgroundColor: '#000',
+  paddingVertical: 12,
+  borderRadius: 7,
+  width: '100%',
+  alignItems: 'center',
+  // Remove extra shadows on button itself
+  shadowColor: 'transparent',
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0,
+  shadowRadius: 0,
+  elevation: 0,
+},
+  continueButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'OpenSans-Bold',
+  },
 });

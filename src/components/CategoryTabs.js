@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
+
 const CATEGORIES = [
   { id: 'STARTER', name: 'Starter' },
   { id: 'MAIN COURSE', name: 'Main Course' },
   { id: 'DESSERT', name: 'Desert' },
   { id: 'SIDES', name: 'Sides' },
 ];
+
 
 export default function CategoryTabs({ selectedCategory, setSelectedCategory, categoryCounts }) {
   return (
@@ -33,19 +35,21 @@ export default function CategoryTabs({ selectedCategory, setSelectedCategory, ca
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',        // All tabs in a row
-    justifyContent: 'center',    // Center them horizontally
+    flexDirection: 'row',
+    justifyContent: 'flex-start',  // CHANGED: From 'center' to 'flex-start' to align left
+    paddingHorizontal: 16,         // ADDED: Match search bar padding to align with it
     marginBottom: 15,
-    flexWrap: 'wrap',            // In case text is long, wrap to next line
+    flexWrap: 'wrap',
   },
   tab: {
     paddingVertical: 6,
-    paddingHorizontal: 12,       // ✅ Reduced horizontal space
+    paddingHorizontal: 8,
     borderWidth: 1,
     borderRadius: 8,
-    marginHorizontal: 4,         // Space between tabs
+    marginHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -9,6 +9,7 @@ import {
   StatusBar,
   Dimensions,
 } from 'react-native';
+import vegetableImg from '../assets/vegetable.png';
 
 export default function IngredientsScreen({ route, navigation }) {
   const { dish } = route.params;
@@ -18,13 +19,7 @@ export default function IngredientsScreen({ route, navigation }) {
   };
 
   const getImageSource = () => {
-    if (dish.image) {
-      return { uri: dish.image };
-    } else if (dish.category?.image) {
-      return { uri: dish.category.image };
-    } else {
-      return { uri: 'https://via.placeholder.com/200x160' };
-    }
+    return vegetableImg;
   };
 
   const renderIngredient = ({ item }) => (
@@ -37,40 +32,33 @@ export default function IngredientsScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
       {/* Header */}
       <View style={styles.topHeader}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Text style={styles.backArrow}>{'<'}</Text>
+          <Text style={styles.backArrow}>‹</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Ingredient list</Text>
       </View>
-
       {/* Dish Card */}
       <View style={styles.dishCard}>
-        {/* Dish Info */}
         <View style={styles.dishInfo}>
           <Text style={styles.dishName} numberOfLines={1} ellipsizeMode="tail">
             {dish.name}
           </Text>
-          <Text style={styles.dishDescription}>
-            {dish.description}
-          </Text>
+          <Text style={styles.dishDescription}>{dish.description}</Text>
+          <View style={styles.ingredientsInline}>
+            <Text style={styles.sectionTitle}>Ingredients</Text>
+            <Text style={styles.forPeople}>For {dish.forPeople || 2} people</Text>
+          </View>
         </View>
-
-        {/* Image with C-shaped border */}
         <View style={styles.imageContainer}>
           <Image source={getImageSource()} style={styles.dishImage} />
         </View>
       </View>
-
-      {/* Ingredient list container */}
+      {/* underline */}
+      <View style={styles.underline} />
+      {/* Ingredient List */}
       <View style={styles.ingredientsSection}>
-        <Text style={styles.sectionTitle}>Ingredients</Text>
-        <View>
-          <Text style={styles.forPeople}>For {dish.forPeople || 2} people</Text>
-          <View style={styles.underline} />
-        </View>
         <FlatList
           data={dish.ingredients || []}
           keyExtractor={(item, index) => index.toString()}
@@ -99,55 +87,75 @@ const styles = {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f4f2f2ff',
+    paddingVertical: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: '#f9f9f9ff',
     backgroundColor: '#fff',
   },
   backButton: {
-    marginRight: 15,
+    marginRight: 20,
     padding: 4,
   },
   backArrow: {
-    fontSize: 24,
+    fontSize: 32,
     color: '#000',
-    fontWeight: '600',
+    fontWeight: '500',
+    marginTop: -7,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '500',
     color: '#000',
   },
   dishCard: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,          // removed horizontal padding
     paddingVertical: 18,
     backgroundColor: '#fff',
-    alignItems: 'stretch', // ensures image takes full height
+    alignItems: 'stretch',
+    justifyContent: 'space-between', // push image fully to right
   },
   dishInfo: {
     flex: 1,
-    marginRight: 20,
+    marginRight: 0,                // removed margin
+    paddingLeft: 20,               // optional: keep some space from left
   },
   dishName: {
-    fontSize: 25,
+    fontSize: 24,
     fontWeight: '600',
     color: '#000',
-    marginBottom: 6,
+    marginBottom: 12,
+    marginTop: 20,
   },
   dishDescription: {
+    fontSize: 12,
+    color: '#8b8b8bff',
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  ingredientsInline: {
+    marginTop: 65,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 3,
+  },
+  forPeople: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 30,
+    fontWeight: '400',
+    color: '#505050ff',
+    marginBottom: 2,
+    marginTop: 3,
   },
   imageContainer: {
-    width: 160,
-    height: screenHeight * 0.25, // dynamically take ~25% of screen height
+    width: 180,
+    height: screenHeight * 0.28,
     borderTopWidth: 1,
     borderLeftWidth: 1,
     borderBottomWidth: 1,
-    borderRightWidth: 0, // remove right border
+    borderRightWidth: 1,
     borderColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
@@ -157,8 +165,13 @@ const styles = {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
-    borderRadius: 0,
-    paddingLeft: 20,
+  },
+  underline: {
+    height: 1,
+    backgroundColor: '#e0dadaff',
+    width: '90%',
+    alignSelf: 'center',
+    marginBottom: 8,
   },
   ingredientsSection: {
     flex: 1,
@@ -166,39 +179,21 @@ const styles = {
     paddingTop: 10,
     backgroundColor: '#fff',
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 8,
-  },
-  forPeople: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 14,
-  },
-  underline: {
-    height: 1,
-    backgroundColor: '#D1D1D1',
-    width: '100%',
-    marginBottom: 12,
-  },
   ingredientRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   ingredientName: {
-    fontSize: 15,
-    color: '#000',
+    fontSize: 14,
+    color: '#505050ff',
     fontWeight: '400',
   },
   ingredientQuantity: {
-    fontSize: 15,
-    color: '#000',
-    fontWeight: '600',
+    fontSize: 14,
+    color: '#505050ff',
+    fontWeight: '400',
     minWidth: 80,
     textAlign: 'right',
   },
